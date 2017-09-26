@@ -935,18 +935,31 @@ type TypeCheckInfo
                     // Sort by name. For things with the same name, 
                     //     - show types with fewer generic parameters first
                     //     - show types before over other related items - they usually have very useful XmlDocs 
-                    let items = 
-                        items |> List.sortBy (fun d -> 
-                            let n = 
-                                match d.Item with  
-                                | Item.Types (_,(TType_app(tcref,_) :: _)) -> 1 + tcref.TyparsNoRange.Length
-                                // Put delegate ctors after types, sorted by #typars. RemoveDuplicateItems will remove FakeInterfaceCtor and DelegateCtor if an earlier type is also reported with this name
-                                | Item.FakeInterfaceCtor (TType_app(tcref,_)) 
-                                | Item.DelegateCtor (TType_app(tcref,_)) -> 1000 + tcref.TyparsNoRange.Length
-                                // Put type ctors after types, sorted by #typars. RemoveDuplicateItems will remove DefaultStructCtors if a type is also reported with this name
-                                | Item.CtorGroup (_, (cinfo :: _)) -> 1000 + 10 * (tcrefOfAppTy g cinfo.EnclosingType).TyparsNoRange.Length 
-                                | _ -> 0
-                            (d.Item.DisplayName,n))
+                    //let items = 
+                        //items |> List.sortBy (fun d -> 
+                            //printfn "%s" d.Item.DisplayName
+                            //let n = 
+                            //    match d.Item with  
+                            //    | Item.Types (_,(TType_app(tcref,_) :: _)) -> 1 + tcref.TyparsNoRange.Length
+                            //    // Put delegate ctors after types, sorted by #typars. RemoveDuplicateItems will remove FakeInterfaceCtor and DelegateCtor if an earlier type is also reported with this name
+                            //    | Item.FakeInterfaceCtor (TType_app(tcref,_)) 
+                            //    | Item.DelegateCtor (TType_app(tcref,_)) -> 1000 + tcref.TyparsNoRange.Length
+                            //    // Put type ctors after types, sorted by #typars. RemoveDuplicateItems will remove DefaultStructCtors if a type is also reported with this name
+                            //    | Item.CtorGroup (_, (cinfo :: _)) ->
+                            //        if d.Item.DisplayName = "Resource" then
+                            //            printfn "yiss %s" d.Item.DisplayName
+                            //            printfn "%A" cinfo.EnclosingType
+                            //        let typarsLength = 
+                            //            try
+                            //                let appTy = tryDestAppTy g cinfo.EnclosingType 
+                            //                appTy |> (function Some appTy -> appTy.TyparsNoRange.Length | _ -> 0)
+                            //            with e -> 
+                            //                0
+                            //            //| :? InternalUndefinedItemRef as ex -> 0
+                            //        1000 + 10 * typarsLength
+                            //    | _ -> 0
+                            //printfn "%d" n
+                            //(d.Item.DisplayName,n))
 
                     // Remove all duplicates. We've put the types first, so this removes the DelegateCtor and DefaultStructCtor's.
                     let items = items |> RemoveDuplicateCompletionItems g
@@ -981,9 +994,9 @@ type TypeCheckInfo
 
                     //end filtering
                     items)
-            (fun msg -> 
-                Trace.TraceInformation(sprintf "FCS: recovering from error in GetDeclarationListSymbols: '%s'" msg)
-                [])
+                    (fun msg -> 
+                        Trace.TraceInformation(sprintf "FCS: recovering from error in GetDeclarationListSymbols: '%s'" msg)
+                        [])
             
     /// Get the "reference resolution" tooltip for at a location
     member __.GetReferenceResolutionStructuredToolTipText(ctok, line,col) = 

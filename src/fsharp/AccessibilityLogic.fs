@@ -308,8 +308,9 @@ let IsTypeAndMethInfoAccessible amap m adTyp ad = function
     | DefaultStructCtor(g,typ) -> IsTypeAccessible g amap m ad typ
 #if EXTENSIONTYPING
     | ProvidedMeth(amap,tpmb,_,m) as etmi -> 
-        let access = tpmb.PUntaint((fun mi -> ComputeILAccess mi.IsPublic mi.IsFamily mi.IsFamilyOrAssembly mi.IsFamilyAndAssembly), m)        
-        IsProvidedMemberAccessible amap m ad etmi.EnclosingType access
+        true
+        //let access = tpmb.PUntaint((fun mi -> ComputeILAccess mi.IsPublic mi.IsFamily mi.IsFamilyOrAssembly mi.IsFamilyAndAssembly), m)        
+        //IsProvidedMemberAccessible amap m ad etmi.EnclosingType access
 #endif
 let IsMethInfoAccessible amap m ad minfo = IsTypeAndMethInfoAccessible amap m ad ad minfo
 

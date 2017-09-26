@@ -3634,6 +3634,8 @@ let InfosForTyconConstructors (ncenv:NameResolver) m ad (tcref:TyconRef) =
         []
     else 
         let typ = FreshenTycon ncenv m tcref
+        if typ.ToString() = "Resource" then
+            printfn "%s" (typ.ToString())
         match ResolveObjectConstructor ncenv (DisplayEnv.Empty g) m ad typ with 
         | Result item -> 
             match item with 
@@ -3642,7 +3644,7 @@ let InfosForTyconConstructors (ncenv:NameResolver) m ad (tcref:TyconRef) =
                 let ctors = 
                     ctorInfos 
                     |> List.filter (IsMethInfoAccessible amap m ad)
-                    |> List.filter (MethInfoIsUnseen g m typ >> not)
+                    //|> List.filter (MethInfoIsUnseen g m typ >> not)
                 match ctors with 
                 | [] -> []
                 | _ -> [Item.MakeCtorGroup(nm,ctors)]

@@ -98,7 +98,8 @@ let ImportTypeRefData (env:ImportMap) m (scoref,path,typeName) =
     let tycon = 
         try   
             fakeTyconRef.Deref
-        with _ ->
+        with e ->
+            printfn "%s" e.Message
             error (Error(FSComp.SR.impReferencedTypeCouldNotBeFoundInAssembly(String.concat "." (Array.append path  [| typeName |]), ccu.AssemblyName),m))
 #if EXTENSIONTYPING
     // Validate (once because of caching)

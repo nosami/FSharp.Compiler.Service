@@ -438,6 +438,9 @@ let MethInfoIsUnseen g m typ minfo =
 
     let isUnseenByHidingAttribute = 
 #if EXTENSIONTYPING
+        let isobj = isObjTy g typ
+        let isapp = isAppTy g typ
+        let iso = isObjTy g minfo.EnclosingType
         not (isObjTy g typ) &&
         isAppTy g typ &&
         isObjTy g minfo.EnclosingType &&

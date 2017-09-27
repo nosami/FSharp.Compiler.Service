@@ -922,81 +922,84 @@ type TypeCheckInfo
     /// Get the symbols for auto-complete items at a location
     member __.GetDeclarationListSymbols (ctok, parseResultsOpt, line, lineStr, colAtEndOfNamesAndResidue, qualifyingNames, partialName, hasTextChangedSinceLastTypecheck) =
         let isInterfaceFile = SourceFileImpl.IsInterfaceFile mainInputFileName
-        ErrorScope.Protect Range.range0 
-            (fun () -> 
-                match GetDeclItemsForNamesAtPosition(ctok, parseResultsOpt, Some qualifyingNames, Some partialName, line, lineStr, colAtEndOfNamesAndResidue, ResolveTypeNamesToCtors, ResolveOverloads.Yes, (fun () -> []), hasTextChangedSinceLastTypecheck) with
-                | None -> List.Empty  
-                | Some (items, denv, _, m) -> 
-                    let items = if isInterfaceFile then items |> List.filter (fun x -> IsValidSignatureFileItem x.Item) else items
-
-                    //do filtering like Declarationset
-                    let items = items |> RemoveExplicitlySuppressedCompletionItems g
-                    
-                    // Sort by name. For things with the same name, 
-                    //     - show types with fewer generic parameters first
-                    //     - show types before over other related items - they usually have very useful XmlDocs 
-                    //let items = 
-                        //items |> List.sortBy (fun d -> 
-                            //printfn "%s" d.Item.DisplayName
-                            //let n = 
-                            //    match d.Item with  
-                            //    | Item.Types (_,(TType_app(tcref,_) :: _)) -> 1 + tcref.TyparsNoRange.Length
-                            //    // Put delegate ctors after types, sorted by #typars. RemoveDuplicateItems will remove FakeInterfaceCtor and DelegateCtor if an earlier type is also reported with this name
-                            //    | Item.FakeInterfaceCtor (TType_app(tcref,_)) 
-                            //    | Item.DelegateCtor (TType_app(tcref,_)) -> 1000 + tcref.TyparsNoRange.Length
-                            //    // Put type ctors after types, sorted by #typars. RemoveDuplicateItems will remove DefaultStructCtors if a type is also reported with this name
-                            //    | Item.CtorGroup (_, (cinfo :: _)) ->
-                            //        if d.Item.DisplayName = "Resource" then
-                            //            printfn "yiss %s" d.Item.DisplayName
-                            //            printfn "%A" cinfo.EnclosingType
-                            //        let typarsLength = 
-                            //            try
-                            //                let appTy = tryDestAppTy g cinfo.EnclosingType 
-                            //                appTy |> (function Some appTy -> appTy.TyparsNoRange.Length | _ -> 0)
-                            //            with e -> 
-                            //                0
-                            //            //| :? InternalUndefinedItemRef as ex -> 0
-                            //        1000 + 10 * typarsLength
-                            //    | _ -> 0
-                            //printfn "%d" n
-                            //(d.Item.DisplayName,n))
-
-                    // Remove all duplicates. We've put the types first, so this removes the DelegateCtor and DefaultStructCtor's.
-                    let items = items |> RemoveDuplicateCompletionItems g
-
-                    // Group by display name
-                    let items = items |> List.groupBy (fun d -> d.Item.DisplayName) 
-
-                    // Filter out operators (and list)
-                    let items = 
-                        // Check whether this item looks like an operator.
-                        let isOpItem(nm, item: CompletionItem list) = 
-                            match item |> List.map (fun x -> x.Item) with 
-                            | [Item.Value _]
-                            | [Item.MethodGroup(_,[_],_)] -> IsOperatorName nm
-                            | [Item.UnionCase _] -> IsOperatorName nm
-                            | _ -> false              
-
-                        let isFSharpList nm = (nm = "[]") // list shows up as a Type and a UnionCase, only such entity with a symbolic name, but want to filter out of intellisense
-
-                        items |> List.filter (fun (nm,items) -> not (isOpItem(nm,items)) && not(isFSharpList nm)) 
+        //ErrorScope.Protect Range.range0 
+            //(fun () -> 
 
 
-                    let items = 
-                        // Filter out duplicate names
-                        items |> List.map (fun (_nm,itemsWithSameName) -> 
-                            match itemsWithSameName with
-                            | [] -> failwith "Unexpected empty bag"
-                            | items ->
-                                items 
-                                |> List.map (fun item -> let symbol = FSharpSymbol.Create(g, thisCcu, tcImports, item.Item)
-                                                         FSharpSymbolUse(g, denv, symbol, ItemOccurence.Use, m)))
 
-                    //end filtering
-                    items)
-                    (fun msg -> 
-                        Trace.TraceInformation(sprintf "FCS: recovering from error in GetDeclarationListSymbols: '%s'" msg)
-                        [])
+        match GetDeclItemsForNamesAtPosition(ctok, parseResultsOpt, Some qualifyingNames, Some partialName, line, lineStr, colAtEndOfNamesAndResidue, ResolveTypeNamesToCtors, ResolveOverloads.Yes, (fun () -> []), hasTextChangedSinceLastTypecheck) with
+        | None -> List.Empty  
+        | Some (items, denv, _, m) -> 
+            let items = if isInterfaceFile then items |> List.filter (fun x -> IsValidSignatureFileItem x.Item) else items
+
+            //do filtering like Declarationset
+            let items = items |> RemoveExplicitlySuppressedCompletionItems g
+            
+            // Sort by name. For things with the same name, 
+            //     - show types with fewer generic parameters first
+            //     - show types before over other related items - they usually have very useful XmlDocs 
+            let items = 
+                items |> List.sortBy (fun d -> 
+                    printfn "%s" d.Item.DisplayName
+                    let n = 
+                        match d.Item with  
+                        | Item.Types (_,(TType_app(tcref,_) :: _)) -> 1 + tcref.TyparsNoRange.Length
+                        // Put delegate ctors after types, sorted by #typars. RemoveDuplicateItems will remove FakeInterfaceCtor and DelegateCtor if an earlier type is also reported with this name
+                        | Item.FakeInterfaceCtor (TType_app(tcref,_)) 
+                        | Item.DelegateCtor (TType_app(tcref,_)) -> 1000 + tcref.TyparsNoRange.Length
+                        // Put type ctors after types, sorted by #typars. RemoveDuplicateItems will remove DefaultStructCtors if a type is also reported with this name
+                        | Item.CtorGroup (_, (cinfo :: _)) ->
+                            if d.Item.DisplayName = "Resource" then
+                                printfn "yiss %s" d.Item.DisplayName
+                                //printfn "%A" cinfo.EnclosingType
+                            let typarsLength = 
+                                try
+                                    let appTy = tryDestAppTy g cinfo.EnclosingType 
+                                    appTy |> (function Some appTy -> appTy.TyparsNoRange.Length | _ -> 0)
+                                with
+                                | :? InternalUndefinedItemRef as ex -> 0
+                            1000 + 10 + typarsLength 
+                        | _ -> 0
+                    printfn "%d" n
+                    (d.Item.DisplayName,n))
+
+            // Remove all duplicates. We've put the types first, so this removes the DelegateCtor and DefaultStructCtor's.
+            let items = items |> RemoveDuplicateCompletionItems g
+
+            // Group by display name
+            let items = items |> List.groupBy (fun d -> d.Item.DisplayName) 
+
+            // Filter out operators (and list)
+            let items = 
+                // Check whether this item looks like an operator.
+                let isOpItem(nm, item: CompletionItem list) = 
+                    match item |> List.map (fun x -> x.Item) with 
+                    | [Item.Value _]
+                    | [Item.MethodGroup(_,[_],_)] -> IsOperatorName nm
+                    | [Item.UnionCase _] -> IsOperatorName nm
+                    | _ -> false              
+
+                let isFSharpList nm = (nm = "[]") // list shows up as a Type and a UnionCase, only such entity with a symbolic name, but want to filter out of intellisense
+
+                items |> List.filter (fun (nm,items) -> not (isOpItem(nm,items)) && not(isFSharpList nm)) 
+
+
+            let items = 
+                // Filter out duplicate names
+                items |> List.map (fun (_nm,itemsWithSameName) -> 
+                    match itemsWithSameName with
+                    | [] -> failwith "Unexpected empty bag"
+                    | items ->
+                        items 
+                        |> List.map (fun item -> let symbol = FSharpSymbol.Create(g, thisCcu, tcImports, item.Item)
+                                                 FSharpSymbolUse(g, denv, symbol, ItemOccurence.Use, m)))
+
+            //end filtering
+            items
+                    //items)
+                    //(fun msg -> 
+                        //Trace.TraceInformation(sprintf "FCS: recovering from error in GetDeclarationListSymbols: '%s'" msg)
+                        //[])
             
     /// Get the "reference resolution" tooltip for at a location
     member __.GetReferenceResolutionStructuredToolTipText(ctok, line,col) = 

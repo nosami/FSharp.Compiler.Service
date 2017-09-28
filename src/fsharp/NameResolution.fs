@@ -3853,12 +3853,12 @@ let rec ResolvePartialLongIdentPrim (ncenv: NameResolver) (nenv: NameResolutionE
            |> List.map (ItemOfTyconRef ncenv m)
 
        // Get all the constructors accessible from here
-       let constructors =  
-           nenv.TyconsByDemangledNameAndArity(fullyQualified).Values
-           |> List.filter (IsTyconUnseen ad g ncenv.amap m >> not)
-           |> List.collect (InfosForTyconConstructors ncenv m ad)
+       //let constructors =  
+           //nenv.TyconsByDemangledNameAndArity(fullyQualified).Values
+           //|> List.filter (IsTyconUnseen ad g ncenv.amap m >> not)
+           //|> List.collect (InfosForTyconConstructors ncenv m ad)
 
-       unqualifiedItems @ activePatternItems @ moduleAndNamespaceItems @ tycons @ constructors
+       unqualifiedItems @ activePatternItems @ moduleAndNamespaceItems @ tycons// @ constructors
 
     | id :: rest -> 
     

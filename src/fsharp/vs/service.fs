@@ -944,7 +944,7 @@ type TypeCheckInfo
                                 | Item.FakeInterfaceCtor (TType_app(tcref,_)) 
                                 | Item.DelegateCtor (TType_app(tcref,_)) -> 1000 + tcref.TyparsNoRange.Length
                                 // Put type ctors after types, sorted by #typars. RemoveDuplicateItems will remove DefaultStructCtors if a type is also reported with this name
-                                | Item.CtorGroup (_, (cinfo :: _)) -> 1000 + 10 * (tcrefOfAppTy g cinfo.EnclosingType).TyparsNoRange.Length 
+                                | Item.CtorGroup _ -> 1000 + 10 //* (tcrefOfAppTy g cinfo.EnclosingType).TyparsNoRange.Length 
                                 | _ -> 0
                             (d.Item.DisplayName,n))
 
